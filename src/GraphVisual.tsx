@@ -18,7 +18,7 @@ interface ILinks {
 }
 
 interface graphData {
-  nodes: INodes;
+  nodes: INodes[];
   links: ILinks[];
 }
 
@@ -38,7 +38,7 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
     const actor = result.actor.value;
     const actorName = result.actorName.value;
     const actress = result.actress ? result.actress.value : null;
-    const actressName = result.actressName ? result.actressName.value : null;
+    // const actressName = result.actressName ? result.actressName.value : null;
 
     // Create or find the film node
     if (!nodeMap[film]) {
@@ -79,7 +79,7 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
   });
 
   // Create the graph data structure
-  const graphData = { nodes, links };
+  const graphData: graphData = { nodes, links };
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
   const updateDimensions = () => {
@@ -122,18 +122,17 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
         d3.forceLink(graphData.links).id((d) => d.index as number)
       )
       .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(400, 300));
+      .force("center", d3.forceCenter(width / 2, height / 2));
 
-    const link = svg
-      .append("g")
+    const link = g
       .selectAll("line")
       .data(graphData.links)
       .enter()
       .append("line")
+      .attr("stroke-width", 1)
       .attr("stroke", "#ccc");
 
-    const node = svg
-      .append("g")
+    const node = g
       .selectAll("circle")
       .data(graphData.nodes)
       .enter()
@@ -158,7 +157,7 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
       .attr("preserveAspectRatio", "xMidYMid meet");
   }, [width, height, woodyAllen]);
 
-  return <svg style={{ width: "100%", height: "100%" }} ref={svgRef}></svg>;
+  return <svg height={height} width={width} ref={svgRef}></svg>;
 };
 
 export default GraphVisual;
