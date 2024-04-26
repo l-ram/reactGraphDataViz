@@ -1,7 +1,11 @@
-import { SPARQLQuerySelectResultsJSON } from "./types/types";
+import { ILinks, INodes, SPARQLQuerySelectResultsJSON } from "./types/types";
 
 export const SPARQLToD3 = (sparqlQuery: SPARQLQuerySelectResultsJSON) => {
-  sparqlQuery.results.bindings.forEach();
+  const nodes: INodes[] = [];
+  const links: ILinks[] = [];
+  const nodeMap = new Map<string, INodes>();
+
+  sparqlQuery.results.bindings.forEach(() => {});
 
   return;
 };
