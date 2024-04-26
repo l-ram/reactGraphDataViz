@@ -1,3 +1,5 @@
+// SPARQL
+
 export interface SPARQLQuerySelectResultsJSON {
   head: {
     vars: string[];
@@ -5,6 +7,8 @@ export interface SPARQLQuerySelectResultsJSON {
   };
   results: {
     bindings: BindingObject[];
+    distinct: boolean;
+    ordered: boolean;
   };
 }
 
@@ -52,4 +56,30 @@ export interface TripleObject {
       object: BindingObject;
     };
   };
+}
+
+// D3
+
+export interface D3ForceGraph {
+  nodes: INodes[];
+  links: ILinks[];
+}
+
+export interface INodes extends NodeDatum {
+  name: string;
+}
+
+export interface ILinks {
+  source: INodes;
+  target: INodes;
+}
+
+export interface NodeDatum {
+  index?: number | undefined;
+  x?: number | undefined;
+  y?: number | undefined;
+  vx?: number | undefined;
+  vy?: number | undefined;
+  fx?: number | null | undefined;
+  fy?: number | null | undefined;
 }

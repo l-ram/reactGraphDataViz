@@ -2,6 +2,7 @@ import woodyAllen from "./assets/woodyAllen.json";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 import { SimulationNodeDatum } from "d3";
+import UseGetSPARQL from "./UseGetSPARQL";
 
 interface IGraphVisual {
   prop: string;
@@ -80,15 +81,14 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
 
   // Create the graph data structure
   const graphData: graphData = { nodes, links };
+  console.log("original json:", woodyAllen);
+  console.log("converted:", graphData);
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
   const updateDimensions = () => {
     setWidth(window.innerWidth);
     setHeight(window.innerHeight);
   };
-
-  console.log(width);
-  console.log(height);
 
   // Use useEffect to handle window resize events
   useEffect(() => {
@@ -113,7 +113,7 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
         g.attr("transform", event.transform);
       });
 
-    svg.call(zoom);
+    svg.call(zoom as any);
 
     const simulation = d3
       .forceSimulation(graphData.nodes)
