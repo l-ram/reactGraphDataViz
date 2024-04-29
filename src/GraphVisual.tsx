@@ -81,8 +81,6 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
 
   // Create the graph data structure
   const graphData: graphData = { nodes, links };
-  console.log("original json:", woodyAllen);
-  console.log("converted:", graphData);
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
   const updateDimensions = () => {

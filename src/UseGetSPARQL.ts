@@ -22,4 +22,4 @@ const UseGetSPARQL = (query: string) => {
   return { isLoading, error, data };
 };
 
-export default {} = UseGetSPARQL;
+export default UseGetSPARQL;
