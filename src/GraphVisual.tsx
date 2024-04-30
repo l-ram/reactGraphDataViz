@@ -1,37 +1,27 @@
 import woodyAllen from "./assets/woodyAllen.json";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
-import { SimulationNodeDatum } from "d3";
 import UseGetSPARQL from "./UseGetSPARQL";
+import {
+  D3ForceGraph,
+  ILinks,
+  INodes,
+  SPARQLQuerySelectResultsJSON,
+} from "./types/types";
+import { SPARQLToD3 } from "./SPARQLToD3";
 
 interface IGraphVisual {
   prop: string;
-}
-
-interface INodes extends SimulationNodeDatum {
-  index?: number | undefined;
-  name: string;
-}
-
-interface ILinks {
-  source: INodes;
-  target: INodes;
-}
-
-interface graphData {
-  nodes: INodes[];
-  links: ILinks[];
 }
 
 const GraphVisual = ({ prop }: IGraphVisual) => {
   prop.length;
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const nodes: INodes[] = [];
-  const links: ILinks[] = [];
+  let nodes: INodes[] = [];
+  let links: ILinks[] = [];
   const nodeMap: Record<string, INodes> = {};
 
-  // Iterate through the results and create nodes and links
   woodyAllen.results.bindings.forEach((result) => {
     // Extract film, actor, and actress
     const film = result.film.value;
@@ -80,12 +70,93 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
   });
 
   // Create the graph data structure
-  const graphData: graphData = { nodes, links };
+
+  // SPARQL JSON to D3 conversion
+
+  const simpleQuery: string = `
+  # https://en.wikipedia.org/wiki/History_of_programming_languages
+# https://en.wikipedia.org/wiki/Perl
+# http://dbpedia.org/page/Perl
+# http://dbpedia.org/sparql
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX dbpedia-owl: <http://dbpedia.org/ontology/>
+PREFIX dbpprop: <http://dbpedia.org/property/>
+PREFIX dbpedia: <http://dbpedia.org/resource/>
+
+SELECT DISTINCT ?lang1 ?lang2 ?lang1label ?lang2label ?lang1value ?lang2value ?lang1year ?lang2year
+WHERE {
+  ?lang1 rdf:type dbpedia-owl:ProgrammingLanguage ;
+         rdfs:label ?lang1name ;
+         dbpprop:year ?lang1year .
+  ?lang2 rdf:type dbpedia-owl:ProgrammingLanguage ;
+         rdfs:label ?lang2name ;
+         dbpprop:year ?lang2year .
+  ?lang1 dbpedia-owl:influenced ?lang2 .
+  FILTER (?lang1 != ?lang2)
+  FILTER (LANG(?lang1name) = 'en')
+  FILTER (LANG(?lang2name) = 'en')
+  BIND (replace(?lang1name, " .programming language.", "") AS ?lang1label)
+  BIND (replace(?lang2name, " .programming language.", "") AS ?lang2label)
+  FILTER (?lang1year > 1950 AND ?lang1year < 2020)
+  FILTER (?lang2year > 1950 AND ?lang2year < 2020)
+
+  BIND ((2020 - ?lang1year) AS ?lang1value)
+  BIND ((2020 - ?lang2year) AS ?lang2value)
+}
+      `;
+
+  const { data, isLoading, error } = UseGetSPARQL(simpleQuery);
+
+  if (data) {
+    const { nodes: nodesFromJSON, links: linksFromJSON } = SPARQLToD3(
+      data as SPARQLQuerySelectResultsJSON
+    );
+
+    nodes = [...nodesFromJSON];
+    links = [...linksFromJSON];
+  }
+
+  const graphData: D3ForceGraph = { nodes, links };
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
   const updateDimensions = () => {
     setWidth(window.innerWidth);
     setHeight(window.innerHeight);
+  };
+
+  const SPARQLErrorComponent = (isError: any) => {
+    if (isError) {
+      return (
+        <div>
+          <h1>Something went wrong!</h1>
+          <p>{isError.message}</p>
+        </div>
+      );
+    } else {
+      null;
+    }
+  };
+
+  const SPARQLLoadingComponent = (isLoading: any) => {
+    if (isLoading) {
+      return (
+        <div>
+          <h1>LOADING</h1>
+        </div>
+      );
+    } else {
+      null;
+    }
+  };
+
+  const JSONresult = (json: SPARQLQuerySelectResultsJSON) => {
+    return (
+      <div>
+        <p>{JSON.stringify(json)}</p>
+      </div>
+    );
   };
 
   // Use useEffect to handle window resize events
@@ -96,6 +167,7 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
     };
   }, []);
 
+  // D3
   useEffect(() => {
     // Visualize the graph using D3 force layout
     const svg = d3.select(svgRef.current);
@@ -153,9 +225,19 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
     svg
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-  }, [width, height, woodyAllen]);
+  }, [width, height]);
 
-  return <svg height={height} width={width} ref={svgRef}></svg>;
+  console.log("nodes:", nodes);
+  console.log("links:", links);
+
+  return (
+    <>
+      <svg height={height} width={width} ref={svgRef} />
+      <SPARQLErrorComponent isError={error} />
+      <SPARQLLoadingComponent isLoading={isLoading} />
+      <JSONresult json={data} />
+    </>
+  );
 };
 
 export default GraphVisual;

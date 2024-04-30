@@ -1,12 +1,13 @@
 import "./App.css";
 import GraphVisual from "./GraphVisual";
-import { SparqlResult } from "./SparqlResult";
+import D3SPARQLScript from "./D3SPARQLScript";
 
 const App = () => {
   return (
     <div>
       <GraphVisual prop={""} />
-      <SparqlResult />
+      <D3SPARQLScript />
+      {/* <SparqlResult /> */}
     </div>
   );
 };

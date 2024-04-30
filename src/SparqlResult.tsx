@@ -10,6 +10,8 @@ export const SparqlResult = () => {
 
   const { data, error, isLoading } = UseGetSPARQL(simpleQuery);
 
+  console.log(data);
+
   //   console.log("sparql loading:", isLoading);
   //   console.log("sparql query:", data);
   //   console.log("sparql error:", error);
