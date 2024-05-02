@@ -1,80 +1,114 @@
-import {
-  BindingObject,
-  D3ForceGraph,
-  ILinks,
-  INodes,
-  SPARQLQuerySelectResultsJSON,
-} from "./types/types";
+import { useState } from "react";
+import { useEffect } from "react";
+import { D3ForceGraph, SPARQLQuerySelectResultsJSON } from "./types/types.js";
 
-export const SPARQLToD3 = (
-  sparqlQuery: SPARQLQuerySelectResultsJSON
-): { nodes: INodes[]; links: ILinks[] } => {
-  const nodes: INodes[] = [];
-  const links: ILinks[] = [];
-  const nodesMap = new Map<string, number>();
+interface GraphConfig {
+  key1?: string;
+  key2?: string;
+  label1?: string | false;
+  label2?: string | false;
+  value1?: string | false;
+  value2?: string | false;
+}
 
-  const recursiveBindingObject: any = (binding: BindingObject) => {
-    let subject, predicate, object;
+interface ID3sparql {
+  version: string;
+  debug: boolean;
+  fetch(url: string, callback: (json: any) => void): void;
+  query(endpoint: string, sparql: string, callback: (json: any) => void): void;
+  graph(json: any, config?: GraphConfig): D3ForceGraph;
+}
 
-    console.log(
-      "subject, predicate, object from converter:",
-      subject,
-      predicate,
-      object
-    );
-
-    if (
-      (binding.subject && binding.subject.type === "triple") ||
-      (binding.object && binding.object.type === "triple")
-    ) {
-      if (binding.subject && binding.subject.type === "triple") {
-        const nestedSubject = recursiveBindingObject(binding.subject.value);
-        subject = nestedSubject.subject;
-        predicate = nestedSubject.predicate;
-        object = nestedSubject.object;
-      }
-      if (binding.object && binding.object.type === "triple") {
-        const nestedObject = recursiveBindingObject(binding.object.value);
-        subject = nestedObject.subject;
-        predicate = nestedObject.predicate;
-        object = nestedObject.object;
-      }
-    } else {
-      if (binding.subject) {
-        subject = binding.subject.value;
-      }
-      if (binding.predicate) {
-        predicate = binding.predicate.value;
-      }
-      if (binding.object) {
-        object = binding.object.value;
-      }
+const d3sparql: ID3sparql = {
+  version: "d3sparql.js version 2018-05-04",
+  debug: false, // Set to true for showing debug information
+  fetch(url: string, callback: (json: any) => void): void {
+    // Fetch implementation...
+    // Use d3.json or similar methods for fetching data
+  },
+  query(endpoint: string, sparql: string, callback: (json: any) => void): void {
+    // Construct query URL
+    const url = `${endpoint}?query=${encodeURIComponent(sparql)}`;
+    if (this.debug) {
+      console.log(endpoint);
     }
-    return { subject, predicate, object };
+    // Fetch the data
+    this.fetch(url, callback);
+  },
+  graph(json: any, config?: GraphConfig): D3ForceGraph {
+    // Graph implementation...
+    // Process json and config to create a D3ForceGraph structure
+  },
+};
+
+d3sparql.query = function (endpoint, sparql, callback) {
+  const url = endpoint + "?query=" + encodeURIComponent(sparql);
+  if (d3sparql.debug) {
+    console.log(endpoint);
+  }
+  d3sparql.fetch(url, callback);
+};
+
+d3sparql.graph = function (json, config) {
+  config = config || {};
+
+  const head: string[] = json.head.vars;
+  const data = json.results.bindings;
+
+  const opts = {
+    key1: config.key1 || head[0] || "key1",
+    key2: config.key2 || head[1] || "key2",
+    label1: config.label1 || head[2] || false,
+    label2: config.label2 || head[3] || false,
+    value1: config.value1 || head[4] || false,
+    value2: config.value2 || head[5] || false,
   };
-
-  sparqlQuery.results.bindings.forEach((binding) => {
-    const { subject, predicate, object } = recursiveBindingObject(binding);
-
-    console.log("foreach loop:", subject, predicate, object);
-
-    if (!nodesMap.has(subject)) {
-      const node = { name: subject };
-      nodesMap.set(subject, nodes.length);
-      nodes.push(node);
+  const graph: D3ForceGraph = {
+    nodes: [],
+    links: [],
+  };
+  const check = new Map();
+  let index = 0;
+  for (let i = 0; i < data.length; i++) {
+    const key1 = data[i][opts.key1].value;
+    const key2 = data[i][opts.key2].value;
+    const label1 = opts.label1 ? data[i][opts.label1].value : key1;
+    const label2 = opts.label2 ? data[i][opts.label2].value : key2;
+    const value1 = opts.value1 ? data[i][opts.value1].value : false;
+    const value2 = opts.value2 ? data[i][opts.value2].value : false;
+    if (!check.has(key1)) {
+      graph.nodes.push({ key: key1, label: label1, value: value1 });
+      check.set(key1, index);
+      index++;
     }
-    if (!nodesMap.has(object)) {
-      const node = { name: object };
-      nodesMap.set(object, nodes.length);
-      nodes.push(node);
+    if (!check.has(key2)) {
+      graph.nodes.push({ key: key2, label: label2, value: value2 });
+      check.set(key2, index);
+      index++;
     }
+    graph.links.push({ source: check.get(key1), target: check.get(key2) });
+  }
+  if (d3sparql.debug) {
+    console.log(JSON.stringify(graph));
+  }
+  return graph;
+};
 
-    const link = {
-      source: nodes[nodesMap.get(subject) as any],
-      target: nodes[nodesMap.get(object) as any],
-    };
-    links.push(link);
+const SPARQLtoD3 = (json: SPARQLQuerySelectResultsJSON | undefined) => {
+  const [sparqlToD3Data, setSparqlToD3Data] = useState<D3ForceGraph>({
+    links: [],
+    nodes: [],
   });
 
-  return { nodes, links };
+  useEffect(() => {
+    const graph = d3sparql.graph(json);
+    console.log("graph conversion result:", graph);
+    setSparqlToD3Data(graph);
+  }, []);
+
+  return {
+    sparqlToD3Data,
+  };
 };
+
+export default SPARQLtoD3;

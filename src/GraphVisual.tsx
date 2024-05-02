@@ -8,7 +8,7 @@ import {
   INodes,
   SPARQLQuerySelectResultsJSON,
 } from "./types/types";
-import { SPARQLToD3 } from "./SPARQLToD3";
+import SPARQLtoD3 from "./SPARQLtoD3";
 
 interface IGraphVisual {
   prop: string;
@@ -20,54 +20,54 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
 
   let nodes: INodes[] = [];
   let links: ILinks[] = [];
-  const nodeMap: Record<string, INodes> = {};
+  // const nodeMap: Record<string, INodes> = {};
 
-  woodyAllen.results.bindings.forEach((result) => {
-    // Extract film, actor, and actress
-    const film = result.film.value;
-    const filmTitle = result.filmTitle.value;
-    const actor = result.actor.value;
-    const actorName = result.actorName.value;
-    const actress = result.actress ? result.actress.value : null;
-    // const actressName = result.actressName ? result.actressName.value : null;
+  // woodyAllen.results.bindings.forEach((result) => {
+  //   // Extract film, actor, and actress
+  //   const film = result.film.value;
+  //   const filmTitle = result.filmTitle.value;
+  //   const actor = result.actor.value;
+  //   const actorName = result.actorName.value;
+  //   const actress = result.actress ? result.actress.value : null;
+  //   // const actressName = result.actressName ? result.actressName.value : null;
 
-    // Create or find the film node
-    if (!nodeMap[film]) {
-      const filmNode: INodes = {
-        index: nodes.length,
-        name: filmTitle,
-      };
-      nodeMap[film] = filmNode;
-      nodes.push(filmNode);
-    }
+  //   // Create or find the film node
+  //   if (!nodeMap[film]) {
+  //     const filmNode: INodes = {
+  //       index: nodes.length,
+  //       name: filmTitle,
+  //     };
+  //     nodeMap[film] = filmNode;
+  //     nodes.push(filmNode);
+  //   }
 
-    // Create or find the actor node
-    if (!nodeMap[actor]) {
-      const actorNode: INodes = {
-        index: nodes.length,
-        name: actorName,
-      };
-      nodeMap[actor] = actorNode;
-      nodes.push(actorNode);
-    }
+  //   // Create or find the actor node
+  //   if (!nodeMap[actor]) {
+  //     const actorNode: INodes = {
+  //       index: nodes.length,
+  //       name: actorName,
+  //     };
+  //     nodeMap[actor] = actorNode;
+  //     nodes.push(actorNode);
+  //   }
 
-    // Add a link between the film and the actor
-    links.push({ source: nodeMap[film], target: nodeMap[actor] });
+  //   // Add a link between the film and the actor
+  //   links.push({ source: nodeMap[film], target: nodeMap[actor] });
 
-    // If there's an actress, create or find the actress node
-    if (actress && !nodeMap[actress]) {
-      const actressNode: INodes = {
-        index: nodes.length,
-        name: actorName,
-      };
-      nodeMap[actress] = actressNode;
-      nodes.push(actressNode);
-      links.push({
-        source: nodeMap[film],
-        target: nodeMap[actress],
-      });
-    }
-  });
+  //   // If there's an actress, create or find the actress node
+  //   if (actress && !nodeMap[actress]) {
+  //     const actressNode: INodes = {
+  //       index: nodes.length,
+  //       name: actorName,
+  //     };
+  //     nodeMap[actress] = actressNode;
+  //     nodes.push(actressNode);
+  //     links.push({
+  //       source: nodeMap[film],
+  //       target: nodeMap[actress],
+  //     });
+  //   }
+  // });
 
   // Create the graph data structure
 
@@ -109,14 +109,14 @@ WHERE {
 
   const { data, isLoading, error } = UseGetSPARQL(simpleQuery);
 
-  if (data) {
-    const { nodes: nodesFromJSON, links: linksFromJSON } = SPARQLToD3(
-      data as SPARQLQuerySelectResultsJSON
-    );
+  // console.log("from api:", data);
 
-    nodes = [...nodesFromJSON];
-    links = [...linksFromJSON];
-  }
+  const { sparqlToD3Data } = SPARQLtoD3(data);
+
+  // console.log("from converter:", sparqlToD3Data);
+
+  nodes = [...sparqlToD3Data.nodes];
+  links = [...sparqlToD3Data.links];
 
   const graphData: D3ForceGraph = { nodes, links };
   const [width, setWidth] = useState(window.innerWidth);
@@ -149,14 +149,6 @@ WHERE {
     } else {
       null;
     }
-  };
-
-  const JSONresult = (json: SPARQLQuerySelectResultsJSON) => {
-    return (
-      <div>
-        <p>{JSON.stringify(json)}</p>
-      </div>
-    );
   };
 
   // Use useEffect to handle window resize events
@@ -227,15 +219,14 @@ WHERE {
       .attr("preserveAspectRatio", "xMidYMid meet");
   }, [width, height]);
 
-  console.log("nodes:", nodes);
-  console.log("links:", links);
+  // console.log("nodes:", nodes);
+  // console.log("links:", links);
 
   return (
     <>
       <svg height={height} width={width} ref={svgRef} />
       <SPARQLErrorComponent isError={error} />
       <SPARQLLoadingComponent isLoading={isLoading} />
-      <JSONresult json={data} />
     </>
   );
 };
