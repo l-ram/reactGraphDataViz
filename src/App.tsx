@@ -1,5 +1,5 @@
 import "./App.css";
-import GraphVisual from "./GraphVisual";
+import GraphVisual from "./components/GraphVisual";
 const App = () => {
   return (
     <div>

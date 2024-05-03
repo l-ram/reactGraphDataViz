@@ -65,6 +65,15 @@ export interface D3ForceGraph {
   links: ILinks[];
 }
 
+export interface GraphConfig {
+  key1?: string;
+  key2?: string;
+  label1?: string | false;
+  label2?: string | false;
+  value1?: string | false;
+  value2?: string | false;
+}
+
 export interface INodes extends NodeDatum {
   name: string;
 }

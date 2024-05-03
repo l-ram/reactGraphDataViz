@@ -1,17 +1,25 @@
-import woodyAllen from "./assets/woodyAllen.json";
+// import woodyAllen from "./assets/woodyAllen.json";
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
-import UseGetSPARQL from "./UseGetSPARQL";
+import UseGetSPARQL from "../hooks/UseGetSPARQL";
 import {
   D3ForceGraph,
   ILinks,
   INodes,
   SPARQLQuerySelectResultsJSON,
-} from "./types/types";
-import SPARQLtoD3 from "./SPARQLtoD3";
+} from "../types/types";
+import SPARQLtoD3 from "../hooks/UseSPARQLToD3";
 
 interface IGraphVisual {
   prop: string;
+}
+
+interface ErrorComp {
+  isError: boolean;
+}
+
+interface IsLoadingComp {
+  isLoading: boolean;
 }
 
 const GraphVisual = ({ prop }: IGraphVisual) => {
@@ -20,58 +28,6 @@ const GraphVisual = ({ prop }: IGraphVisual) => {
 
   let nodes: INodes[] = [];
   let links: ILinks[] = [];
-  // const nodeMap: Record<string, INodes> = {};
-
-  // woodyAllen.results.bindings.forEach((result) => {
-  //   // Extract film, actor, and actress
-  //   const film = result.film.value;
-  //   const filmTitle = result.filmTitle.value;
-  //   const actor = result.actor.value;
-  //   const actorName = result.actorName.value;
-  //   const actress = result.actress ? result.actress.value : null;
-  //   // const actressName = result.actressName ? result.actressName.value : null;
-
-  //   // Create or find the film node
-  //   if (!nodeMap[film]) {
-  //     const filmNode: INodes = {
-  //       index: nodes.length,
-  //       name: filmTitle,
-  //     };
-  //     nodeMap[film] = filmNode;
-  //     nodes.push(filmNode);
-  //   }
-
-  //   // Create or find the actor node
-  //   if (!nodeMap[actor]) {
-  //     const actorNode: INodes = {
-  //       index: nodes.length,
-  //       name: actorName,
-  //     };
-  //     nodeMap[actor] = actorNode;
-  //     nodes.push(actorNode);
-  //   }
-
-  //   // Add a link between the film and the actor
-  //   links.push({ source: nodeMap[film], target: nodeMap[actor] });
-
-  //   // If there's an actress, create or find the actress node
-  //   if (actress && !nodeMap[actress]) {
-  //     const actressNode: INodes = {
-  //       index: nodes.length,
-  //       name: actorName,
-  //     };
-  //     nodeMap[actress] = actressNode;
-  //     nodes.push(actressNode);
-  //     links.push({
-  //       source: nodeMap[film],
-  //       target: nodeMap[actress],
-  //     });
-  //   }
-  // });
-
-  // Create the graph data structure
-
-  // SPARQL JSON to D3 conversion
 
   const simpleQuery: string = `
   # https://en.wikipedia.org/wiki/History_of_programming_languages
@@ -107,11 +63,26 @@ WHERE {
 }
       `;
 
-  const { data, isLoading, error } = UseGetSPARQL(simpleQuery);
+  const woodyAllenQuery: string = `PREFIX dbo: <http://dbpedia.org/ontology/>
+  PREFIX dbr: <http://dbpedia.org/resource/>
+  PREFIX dbp: <http://dbpedia.org/property/>
+  PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  
+  SELECT ?movie ?actor
+  WHERE {
+      ?movie dbo:director dbr:Woody_Allen .
+      ?movie dbo:starring ?actor .
+  }`;
+
+  const { data, isLoading, isError, status } = UseGetSPARQL(woodyAllenQuery);
 
   // console.log("from api:", data);
 
-  const { sparqlToD3Data } = SPARQLtoD3(data);
+  console.log(status);
+  console.log(isError);
+  console.log(isLoading);
+  console.log(data);
+  const { sparqlToD3Data } = SPARQLtoD3(data as SPARQLQuerySelectResultsJSON);
 
   // console.log("from converter:", sparqlToD3Data);
 
@@ -126,30 +97,31 @@ WHERE {
     setHeight(window.innerHeight);
   };
 
-  const SPARQLErrorComponent = (isError: any) => {
+  const SPARQLErrorComponent: React.FC<ErrorComp> = ({ isError }) => {
+    console.log("received error?:", isError);
     if (isError) {
       return (
         <div>
-          <h1>Something went wrong!</h1>
-          <p>{isError.message}</p>
+          <h1 style={{ color: "white" }}>Something went wrong!</h1>
         </div>
       );
-    } else {
-      null;
     }
+    return null;
   };
 
-  const SPARQLLoadingComponent = (isLoading: any) => {
-    if (isLoading) {
-      return (
-        <div>
-          <h1>LOADING</h1>
-        </div>
-      );
-    } else {
-      null;
-    }
-  };
+  console.log();
+
+  // const SPARQLLoadingComponent: React.FC<IsLoadingComp> = ({ isLoading }) => {
+  //   console.log("received loading?:", isLoading);
+  //   if (isLoading) {
+  //     return (
+  //       <div>
+  //         <h1>LOADING</h1>
+  //       </div>
+  //     );
+  //   }
+  //   return null;
+  // };
 
   // Use useEffect to handle window resize events
   useEffect(() => {
@@ -219,15 +191,13 @@ WHERE {
       .attr("preserveAspectRatio", "xMidYMid meet");
   }, [width, height]);
 
-  // console.log("nodes:", nodes);
-  // console.log("links:", links);
-
   return (
-    <>
+    <div>
+      {isLoading && <h1>Loading...</h1>}
+      {isError && <SPARQLErrorComponent isError={isError} />}
+
       <svg height={height} width={width} ref={svgRef} />
-      <SPARQLErrorComponent isError={error} />
-      <SPARQLLoadingComponent isLoading={isLoading} />
-    </>
+    </div>
   );
 };
 
