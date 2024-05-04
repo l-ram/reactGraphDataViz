@@ -10,10 +10,6 @@ import {
 } from "../types/types";
 import SPARQLtoD3 from "../hooks/UseSPARQLToD3";
 
-interface IGraphVisual {
-  prop: string;
-}
-
 interface ErrorComp {
   isError: boolean;
 }
@@ -22,9 +18,14 @@ interface IsLoadingComp {
   isLoading: boolean;
 }
 
-const GraphVisual = ({ prop }: IGraphVisual) => {
-  prop.length;
+const GraphVisual = () => {
   const svgRef = useRef<SVGSVGElement>(null);
+
+  const [jsonData, setJsonData] = useState<SPARQLQuerySelectResultsJSON>();
+  const [d3Data, setD3Data] = useState<D3ForceGraph>({
+    nodes: [],
+    links: [],
+  });
 
   let nodes: INodes[] = [];
   let links: ILinks[] = [];
@@ -74,20 +75,24 @@ WHERE {
       ?movie dbo:starring ?actor .
   }`;
 
-  const { data, isLoading, isError, status } = UseGetSPARQL(woodyAllenQuery);
+  const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
 
-  // console.log("from api:", data);
+  useEffect(() => {
+    setJsonData(data);
+  }, [data]);
 
-  console.log(status);
-  console.log(isError);
-  console.log(isLoading);
-  console.log(data);
-  const { sparqlToD3Data } = SPARQLtoD3(data as SPARQLQuerySelectResultsJSON);
+  const getLoadedData = async () => {
+    const sparqlToD3Data = await SPARQLtoD3(jsonData);
+
+    setD3Data(sparqlToD3Data);
+  };
+
+  getLoadedData();
 
   // console.log("from converter:", sparqlToD3Data);
 
-  nodes = [...sparqlToD3Data.nodes];
-  links = [...sparqlToD3Data.links];
+  nodes = [...d3Data.nodes];
+  links = [...d3Data.links];
 
   const graphData: D3ForceGraph = { nodes, links };
   const [width, setWidth] = useState(window.innerWidth);

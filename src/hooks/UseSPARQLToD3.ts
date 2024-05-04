@@ -51,21 +51,19 @@ const sparql2D3Graph = (
   return graph;
 };
 
-const SPARQLtoD3 = (json: SPARQLQuerySelectResultsJSON) => {
+const SPARQLtoD3 = (json: SPARQLQuerySelectResultsJSON | undefined) => {
   const [sparqlToD3Data, setSparqlToD3Data] = useState<D3ForceGraph>({
     links: [],
     nodes: [],
   });
 
   useEffect(() => {
-    const graph = sparql2D3Graph(json);
+    const graph = sparql2D3Graph(json as SPARQLQuerySelectResultsJSON);
     console.log("graph conversion result:", graph);
     setSparqlToD3Data(graph);
   }, []);
 
-  return {
-    sparqlToD3Data,
-  };
+  return sparqlToD3Data;
 };
 
 export default SPARQLtoD3;

@@ -3,7 +3,7 @@ import GraphVisual from "./components/GraphVisual";
 const App = () => {
   return (
     <div>
-      <GraphVisual prop={""} />
+      <GraphVisual />
       {/* <SparqlResult /> */}
     </div>
   );
