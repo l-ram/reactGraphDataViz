@@ -458,7 +458,15 @@ WHERE {
     return () => {
       window.removeEventListener("resize", updateDimensions);
     };
-  }, []);
+  }, [data, jsonData]);
+
+  useEffect(() => {
+    if (data !== undefined) {
+      setJsonData(...[data]);
+    }
+    sparql2D3Graph(jsonData);
+    console.log(data, jsonData);
+  }, [data, jsonData]);
 
   // D3
   useEffect(() => {
@@ -518,14 +526,7 @@ WHERE {
     svg
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-  }, [width, height]);
-
-  useEffect(() => {
-    if (data !== undefined) {
-      setJsonData(...[data]);
-    }
-    sparql2D3Graph(jsonData);
-  }, [data, jsonData]);
+  }, []);
 
   return (
     <div>
