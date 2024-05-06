@@ -4,11 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import UseGetSPARQL from "../hooks/UseGetSPARQL";
 import {
   D3ForceGraph,
+  GraphConfig,
   ILinks,
   INodes,
   SPARQLQuerySelectResultsJSON,
 } from "../types/types";
-import SPARQLtoD3 from "../hooks/UseSPARQLToD3";
 
 interface ErrorComp {
   isError: boolean;
@@ -21,7 +21,24 @@ interface IsLoadingComp {
 const GraphVisual = () => {
   const svgRef = useRef<SVGSVGElement>(null);
 
-  const [jsonData, setJsonData] = useState<SPARQLQuerySelectResultsJSON>();
+  const [jsonData, setJsonData] = useState<SPARQLQuerySelectResultsJSON>({
+    head: {
+      vars: ["", ""],
+      link: ["", ""],
+    },
+    results: {
+      bindings: [
+        {
+          "Waiting for data": {
+            type: "uri",
+            value: "data",
+          },
+        },
+      ],
+      distinct: false,
+      ordered: false,
+    },
+  });
   const [d3Data, setD3Data] = useState<D3ForceGraph>({
     nodes: [],
     links: [],
@@ -29,6 +46,65 @@ const GraphVisual = () => {
 
   let nodes: INodes[] = [];
   let links: ILinks[] = [];
+
+  const sparql2D3Graph = (
+    json: SPARQLQuerySelectResultsJSON,
+    config?: GraphConfig
+  ): D3ForceGraph => {
+    config = config || {};
+
+    const head: string[] = json.head.vars;
+    const data = json.results.bindings;
+
+    const opts = {
+      key1: config.key1 || head[0] || "key1",
+      key2: config.key2 || head[1] || "key2",
+      label1: config.label1 || head[2] || false,
+      label2: config.label2 || head[3] || false,
+      value1: config.value1 || head[4] || false,
+      value2: config.value2 || head[5] || false,
+    };
+    const graph: D3ForceGraph = {
+      nodes: [],
+      links: [],
+    };
+    const check = new Map();
+    let index = 0;
+    for (let i = 0; i < data.length; i++) {
+      const key1 = data[i][opts.key1].value;
+      const key2 = data[i][opts.key2].value;
+      const label1 =
+        opts.label1 && typeof opts.label1 === "string" && data[i][opts.label1]
+          ? data[i][opts.label1].value
+          : key1;
+      const label2 =
+        opts.label2 && typeof opts.label2 === "string" && data[i][opts.label2]
+          ? data[i][opts.label2].value
+          : key2;
+      const value1 =
+        opts.value1 && typeof opts.value1 === "string" && data[i][opts.value1]
+          ? data[i][opts.value1].value
+          : false;
+      const value2 =
+        opts.value2 && typeof opts.value2 === "string" && data[i][opts.value2]
+          ? data[i][opts.value2].value
+          : false;
+
+      if (!check.has(key1)) {
+        graph.nodes.push({ key: key1, label: label1, value: value1 });
+        check.set(key1, index);
+        index++;
+      }
+      if (!check.has(key2)) {
+        graph.nodes.push({ key: key2, label: label2, value: value2 });
+        check.set(key2, index);
+        index++;
+      }
+      graph.links.push({ source: check.get(key1), target: check.get(key2) });
+    }
+    setD3Data(graph);
+    return graph;
+  };
 
   const simpleQuery: string = `
   # https://en.wikipedia.org/wiki/History_of_programming_languages
@@ -78,18 +154,11 @@ WHERE {
   const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
 
   useEffect(() => {
-    setJsonData(data);
+    if (data) {
+      setJsonData(data);
+    }
+    sparql2D3Graph(jsonData);
   }, [data]);
-
-  const getLoadedData = async () => {
-    const sparqlToD3Data = await SPARQLtoD3(jsonData);
-
-    setD3Data(sparqlToD3Data);
-  };
-
-  getLoadedData();
-
-  // console.log("from converter:", sparqlToD3Data);
 
   nodes = [...d3Data.nodes];
   links = [...d3Data.links];

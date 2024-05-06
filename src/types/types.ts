@@ -12,6 +12,19 @@ export interface SPARQLQuerySelectResultsJSON {
   };
 }
 
+const tempData = {
+  head: {
+    vars: ["", ""],
+    link: ["", ""]
+  },
+  results: {
+    bindings: BindingObject[],
+    distinct: false,
+    ordered: false,
+  }
+}
+
+
 export type BindingObject =
   | IRIObject
   | LiteralObject
