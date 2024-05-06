@@ -1,6 +1,5 @@
 import { useQuery } from "react-query";
 import { SPARQLQuerySelectResultsJSON } from "../types/types";
-import { error } from "console";
 
 const UseGetSPARQL = (query: string) => {
   const fetchQuery = async () => {
@@ -19,11 +18,6 @@ const UseGetSPARQL = (query: string) => {
     queryKey: ["sparql", query],
     queryFn: async () => await fetchQuery(),
   });
-
-  console.log("query data:", data);
-  console.log("query ran");
-  console.log("is loading?:", isLoading);
-  console.log("is error?:", isError);
   return { isLoading, isError, data };
 };
 

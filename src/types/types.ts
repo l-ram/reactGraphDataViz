@@ -12,19 +12,6 @@ export interface SPARQLQuerySelectResultsJSON {
   };
 }
 
-const tempData = {
-  head: {
-    vars: ["", ""],
-    link: ["", ""]
-  },
-  results: {
-    bindings: BindingObject[],
-    distinct: false,
-    ordered: false,
-  }
-}
-
-
 export type BindingObject =
   | IRIObject
   | LiteralObject
@@ -74,8 +61,8 @@ export interface TripleObject {
 // D3
 
 export interface D3ForceGraph {
-  nodes: INodes[];
-  links: ILinks[];
+  nodes: any[];
+  links: any[];
 }
 
 export interface GraphConfig {
@@ -87,21 +74,24 @@ export interface GraphConfig {
   value2?: string | false;
 }
 
-export interface INodes extends NodeDatum {
-  name: string;
+interface Source {
+  index?: number;
+  key: string | number;
+  label: string | number;
+  value: string | number;
+  vx: number;
+  vy: number;
+  x: number;
+  y: number;
 }
 
-export interface ILinks {
-  source: INodes;
-  target: INodes;
-}
-
-export interface NodeDatum {
-  index?: number | undefined;
-  x?: number | undefined;
-  y?: number | undefined;
-  vx?: number | undefined;
-  vy?: number | undefined;
-  fx?: number | null | undefined;
-  fy?: number | null | undefined;
+interface Target {
+  index?: number;
+  key: string | number;
+  label: string | number;
+  value: string | number;
+  vx: number;
+  vy: number;
+  x: number;
+  y: number;
 }
