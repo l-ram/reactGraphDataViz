@@ -2,6 +2,7 @@
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 import UseGetSPARQL from "../hooks/UseGetSPARQL";
+import { findLevelsBFS } from "../graphAlgorithms";
 import {
   D3ForceGraph,
   GraphConfig,
@@ -62,247 +63,6 @@ const GraphVisual = () => {
             value: "1996",
           },
         },
-        {
-          lang1: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Eiffel_(programming_language)",
-          },
-          lang2: { type: "uri", value: "http://dbpedia.org/resource/Sather" },
-          lang1label: { type: "literal", value: "Eiffel" },
-          lang2label: { type: "literal", value: "Sather" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "34",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "30",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1986",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1990",
-          },
-        },
-        {
-          lang1: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Joy_(programming_language)",
-          },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Factor_(programming_language)",
-          },
-          lang1label: { type: "literal", value: "Joy" },
-          lang2label: { type: "literal", value: "Factor" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "19",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "17",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "2001",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "2003",
-          },
-        },
-        {
-          lang1: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/SASL_(programming_language)",
-          },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Kent_Recursive_Calculator",
-          },
-          lang1label: { type: "literal", value: "SASL" },
-          lang2label: { type: "literal", value: "Kent Recursive Calculator" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "48",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "39",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1972",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1981",
-          },
-        },
-        {
-          lang1: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/FP_(programming_language)",
-          },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/FL_(programming_language)",
-          },
-          lang1label: { type: "literal", value: "FP" },
-          lang2label: { type: "literal", value: "FL" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "43",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "31",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1977",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1989",
-          },
-        },
-        {
-          lang1: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Lucid_(programming_language)",
-          },
-          lang2: { type: "uri", value: "http://dbpedia.org/resource/SISAL" },
-          lang1label: { type: "literal", value: "Lucid" },
-          lang2label: { type: "literal", value: "SISAL" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "44",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "37",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1976",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1983",
-          },
-        },
-        {
-          lang1: { type: "uri", value: "http://dbpedia.org/resource/SP/k" },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Turing_(programming_language)",
-          },
-          lang1label: { type: "literal", value: "SP/k" },
-          lang2label: { type: "literal", value: "Turing" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "46",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "38",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1974",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1982",
-          },
-        },
-        {
-          lang1: { type: "uri", value: "http://dbpedia.org/resource/SP/k" },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Turing_(programming_language)",
-          },
-          lang1label: { type: "literal", value: "SP/k" },
-          lang2label: { type: "literal", value: "Turing" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "46",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "33",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1974",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1987",
-          },
-        },
-        {
-          lang1: { type: "uri", value: "http://dbpedia.org/resource/SP/k" },
-          lang2: {
-            type: "uri",
-            value: "http://dbpedia.org/resource/Turing_(programming_language)",
-          },
-          lang1label: { type: "literal", value: "SP/k" },
-          lang2label: { type: "literal", value: "Turing" },
-          lang1value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "46",
-          },
-          lang2value: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "29",
-          },
-          lang1year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1974",
-          },
-          lang2year: {
-            type: "literal",
-            datatype: "http://www.w3.org/2001/XMLSchema#integer",
-            value: "1991",
-          },
-        },
       ],
     },
   });
@@ -310,9 +70,6 @@ const GraphVisual = () => {
     nodes: [],
     links: [],
   });
-
-  let nodes = [];
-  let links = [];
 
   // ts-
   const sparql2D3Graph = (
@@ -429,10 +186,6 @@ WHERE {
 
   const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
 
-  nodes = [...d3Data.nodes];
-  links = [...d3Data.links];
-
-  const graphData: D3ForceGraph = { nodes, links };
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
   const updateDimensions = () => {
@@ -441,7 +194,6 @@ WHERE {
   };
 
   const SPARQLErrorComponent: React.FC<ErrorComp> = ({ isError }) => {
-    console.log("received error?:", isError);
     if (isError) {
       return (
         <div>
@@ -465,7 +217,6 @@ WHERE {
       setJsonData(...[data]);
     }
     sparql2D3Graph(jsonData);
-    console.log(data, jsonData);
   }, [data, jsonData]);
 
   // D3
@@ -477,6 +228,9 @@ WHERE {
 
     const g = svg.append("g");
 
+    const colours = d3.schemeTableau10;
+    const colour = d3.scaleOrdinal(colours);
+
     const zoom = d3
       .zoom()
       .scaleExtent([0.1, 10])
@@ -487,29 +241,58 @@ WHERE {
     svg.call(zoom as any);
 
     const simulation = d3
-      .forceSimulation(graphData.nodes)
+      .forceSimulation(d3Data.nodes)
       .force(
         "link",
-        d3.forceLink(graphData.links).id((d) => d.index as number)
+        d3.forceLink(d3Data.links).id((d) => d.index as number)
       )
       .force("charge", d3.forceManyBody())
       .force("center", d3.forceCenter(width / 2, height / 2));
 
+    const drag = (simulation: d3.Simulation<any, undefined>) => {
+      const dragStarted = (event: any) => {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        event.subject.fx = event.subject.x;
+        event.subject.fy = event.subject.y;
+      };
+
+      const dragged = (event: any) => {
+        event.subject.fx = event.x;
+        event.subject.fy = event.y;
+      };
+
+      const dragended = (event: any) => {
+        if (!event.active) simulation.alphaTarget(0);
+        event.subject.fx = null;
+        event.subject.fy = null;
+      };
+
+      return d3
+        .drag()
+        .on("start", dragStarted)
+        .on("drag", dragged)
+        .on("end", dragended);
+    };
+
     const link = g
       .selectAll("line")
-      .data(graphData.links)
+      .data(d3Data.links)
       .enter()
       .append("line")
       .attr("stroke-width", 1)
-      .attr("stroke", "#ccc");
+      .attr("stroke", "#ccc")
+      .attr("opacity", 0.5);
 
     const node = g
       .selectAll("circle")
-      .data(graphData.nodes)
+      .data(d3Data.nodes)
       .enter()
       .append("circle")
       .attr("r", 8)
-      .attr("fill", "blue");
+      .attr("fill", (d) => colour(d))
+      .join("circle")
+      .attr("r", 5)
+      .call(drag(simulation as any) as any);
 
     node.append("title").text((d) => d.name);
 
@@ -526,7 +309,9 @@ WHERE {
     svg
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-  }, []);
+  }, [d3Data]);
+
+  // const levelMap = findLevelsBFS(d3Data);
 
   return (
     <div>

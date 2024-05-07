@@ -1,3 +1,5 @@
+import { D3ForceGraph } from "./types/types";
+
 const airports: string[] = "PHX BKK OKC JFK LAX MEX EZE HEL LOS LAP LIM".split(
   " "
 );
@@ -48,6 +50,43 @@ const bfs = (start: string) => {
       }
     }
   }
+};
+
+// Find all levels in a graph
+
+export const findLevelsBFS = (graph: D3ForceGraph): Map<any, any> => {
+  console.log("got the graph?", graph);
+
+  const levelMap = new Map();
+  const queue = [];
+
+  const rootNode = graph.nodes[0];
+
+  console.log(rootNode);
+
+  console.log(rootNode);
+  levelMap.set(rootNode.key, 0);
+  queue.push(rootNode);
+
+  while (queue.length > 0) {
+    const currentNode = queue.shift();
+    const currentLevel = levelMap.get(currentNode.key);
+
+    const neighbours = graph.links
+      .filter((link) => link.source === currentNode.key)
+      .map((link) => link.target);
+
+    neighbours.forEach((neighbourKey) => {
+      if (!levelMap.has(neighbourKey)) {
+        levelMap.set(neighbourKey, currentLevel + 1);
+        const neighbourNode = graph.nodes.find(
+          (node) => node.key === neighbourKey
+        );
+        queue.push(neighbourNode);
+      }
+    });
+  }
+  return levelMap;
 };
 
 // bfs("PHX");
