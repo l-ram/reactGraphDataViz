@@ -1,4 +1,6 @@
+import { nextTick } from "process";
 import { D3ForceGraph } from "./types/types";
+import { Nodes } from "./types/types";
 
 const airports: string[] = "PHX BKK OKC JFK LAX MEX EZE HEL LOS LAP LIM".split(
   " "
@@ -53,46 +55,47 @@ const bfs = (start: string) => {
 };
 
 // Find all levels in a graph
+export const findLevelsBFS = (graph: D3ForceGraph): Nodes[] => {
+  const { nodes, links } = graph;
 
-export const findLevelsBFS = (graph: D3ForceGraph): Map<any, any> => {
-  console.log("got the graph?", graph);
+  console.log("got nodes?", nodes);
 
-  const levelMap = new Map();
-  const queue = [];
+  nodes.forEach((node) => {
+    node.level = null;
+  });
 
-  const rootNode = graph.nodes[0];
+  const nodeMap = new Map<string, Nodes>(nodes.map((node) => [node.key, node]));
 
-  console.log(rootNode);
+  const rootNode = nodeMap.get(nodes[0].key);
 
-  console.log(rootNode);
-  levelMap.set(rootNode.key, 0);
-  queue.push(rootNode);
+  if (!rootNode) {
+    console.error("Root node with id ${rootNode} not found");
+    return nodes;
+  }
+
+  rootNode.level = 0;
+
+  const queue: Nodes[] = [rootNode];
 
   while (queue.length > 0) {
     const currentNode = queue.shift();
-    const currentLevel = levelMap.get(currentNode.key);
-
-    const neighbours = graph.links
-      .filter((link) => link.source === currentNode.key)
-      .map((link) => link.target);
-
-    neighbours.forEach((neighbourKey) => {
-      if (!levelMap.has(neighbourKey)) {
-        levelMap.set(neighbourKey, currentLevel + 1);
-        const neighbourNode = graph.nodes.find(
-          (node) => node.key === neighbourKey
-        );
-        queue.push(neighbourNode);
-      }
-    });
+    links
+      .filter((link) => link.source.key === currentNode?.key)
+      .forEach((link) => {
+        const neighbourNode = nodeMap.get(link.target.key);
+        console.log("node map:", nodeMap);
+        if (neighbourNode?.level === null) {
+          neighbourNode.level = (currentNode?.level as number) + 1;
+          queue.push(neighbourNode);
+        }
+      });
   }
-  return levelMap;
+  return nodes;
 };
 
 // bfs("PHX");
 
 const dfs = (start: string, visited = new Set()) => {
-  console.log(start);
   visited.add(start);
 
   const destinations = adjacencyList.get(start);
@@ -109,5 +112,3 @@ const dfs = (start: string, visited = new Set()) => {
     }
   }
 };
-
-dfs("PHX");

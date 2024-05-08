@@ -61,8 +61,15 @@ export interface TripleObject {
 // D3
 
 export interface D3ForceGraph {
-  nodes: any[];
+  nodes: Nodes[];
   links: any[];
+}
+
+export interface Nodes extends d3.SimulationNodeDatum {
+  key: string;
+  label: string;
+  value: boolean;
+  level?: number | null;
 }
 
 export interface GraphConfig {

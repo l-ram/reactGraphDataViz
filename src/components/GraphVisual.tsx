@@ -71,7 +71,6 @@ const GraphVisual = () => {
     links: [],
   });
 
-  // ts-
   const sparql2D3Graph = (
     json: SPARQLQuerySelectResultsJSON,
     config?: GraphConfig
@@ -124,12 +123,20 @@ const GraphVisual = () => {
           : false;
 
       if (!check.has(key1)) {
-        graph.nodes.push({ key: key1, label: label1, value: value1 });
+        graph.nodes.push({
+          key: key1 as string,
+          label: label1 as string,
+          value: value1 as boolean,
+        });
         check.set(key1, index);
         index++;
       }
       if (!check.has(key2)) {
-        graph.nodes.push({ key: key2, label: label2, value: value2 });
+        graph.nodes.push({
+          key: key2 as string,
+          label: label2 as string,
+          value: value2 as boolean,
+        });
         check.set(key2, index);
         index++;
       }
@@ -219,6 +226,19 @@ WHERE {
     sparql2D3Graph(jsonData);
   }, [data, jsonData]);
 
+  useEffect(() => {
+    if (d3Data.nodes.length == 0) {
+      return;
+    } else {
+      const updatedNodes = findLevelsBFS(d3Data);
+      console.log("updated nodes:", updatedNodes);
+      setD3Data((prevState) => ({
+        ...prevState,
+        nodes: updatedNodes,
+      }));
+    }
+  }, [data]);
+
   // D3
   useEffect(() => {
     // Visualize the graph using D3 force layout
@@ -289,12 +309,12 @@ WHERE {
       .enter()
       .append("circle")
       .attr("r", 8)
-      .attr("fill", (d) => colour(d))
+      .style("fill", (d) => colour(d.level?.toString(2) as string))
       .join("circle")
       .attr("r", 5)
       .call(drag(simulation as any) as any);
 
-    node.append("title").text((d) => d.name);
+    node.append("title").text((d) => d.key);
 
     simulation.on("tick", () => {
       link
@@ -309,9 +329,7 @@ WHERE {
     svg
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
-  }, [d3Data]);
-
-  // const levelMap = findLevelsBFS(d3Data);
+  }, [data, isLoading, d3Data]);
 
   return (
     <div>
