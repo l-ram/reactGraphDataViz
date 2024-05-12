@@ -6,6 +6,7 @@ import { findLevelsBFS } from "../graphAlgorithms";
 import {
   D3ForceGraph,
   GraphConfig,
+  Nodes,
   SPARQLQuerySelectResultsJSON,
 } from "../types/types";
 
@@ -77,8 +78,18 @@ const GraphVisual = () => {
   ): D3ForceGraph => {
     config = config || {};
 
+    console.log("sparql json:", json);
+
     const head: string[] = json.head.vars;
     const results = json.results.bindings;
+
+    const nodeTypeMapping: { [key: string]: string } = {};
+
+    head.forEach((head) => {
+      nodeTypeMapping[head] = head;
+    });
+
+    console.log("types:", nodeTypeMapping);
 
     const opts = {
       key1: config.key1 || head[0] || "key1",
@@ -94,6 +105,7 @@ const GraphVisual = () => {
     };
     const check = new Map();
     let index = 0;
+
     for (let i = 0; i < results.length; i++) {
       const key1 = results[i][opts.key1].value;
       const key2 = results[i][opts.key2].value;
@@ -122,11 +134,15 @@ const GraphVisual = () => {
           ? results[i][opts.value2].value
           : false;
 
+      const type1 = nodeTypeMapping[opts.key1] || "unknown";
+      const type2 = nodeTypeMapping[opts.key2] || "unknown";
+
       if (!check.has(key1)) {
         graph.nodes.push({
           key: key1 as string,
           label: label1 as string,
           value: value1 as boolean,
+          type: type1,
         });
         check.set(key1, index);
         index++;
@@ -136,6 +152,7 @@ const GraphVisual = () => {
           key: key2 as string,
           label: label2 as string,
           value: value2 as boolean,
+          type: type2,
         });
         check.set(key2, index);
         index++;
@@ -185,10 +202,11 @@ WHERE {
   PREFIX dbp: <http://dbpedia.org/property/>
   PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
   
-  SELECT ?movie ?actor
+  SELECT DISTINCT ?movie ?actor ?director
   WHERE {
-      ?movie dbo:director dbr:Woody_Allen .
-      ?movie dbo:starring ?actor .
+      ?movie dbo:director ?director ;
+            dbo:starring ?actor .
+      FILTER(?director =  dbr:Woody_Allen)
   }`;
 
   const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
@@ -219,6 +237,7 @@ WHERE {
     };
   }, [data, jsonData]);
 
+  // Transform Results JSON to D3 graph data
   useEffect(() => {
     if (data !== undefined) {
       setJsonData(...[data]);
@@ -231,7 +250,6 @@ WHERE {
       return;
     } else {
       const updatedNodes = findLevelsBFS(d3Data);
-      console.log("updated nodes:", updatedNodes);
       setD3Data((prevState) => ({
         ...prevState,
         nodes: updatedNodes,
@@ -262,12 +280,11 @@ WHERE {
 
     const simulation = d3
       .forceSimulation(d3Data.nodes)
-      .force(
-        "link",
-        d3.forceLink(d3Data.links).id((d) => d.index as number)
-      )
+      .force("link", d3.forceLink(d3Data.links))
       .force("charge", d3.forceManyBody())
-      .force("center", d3.forceCenter(width / 2, height / 2));
+      .force("center", d3.forceCenter(width / 2, height / 2))
+      .force("x", d3.forceX())
+      .force("y", d3.forceY());
 
     const drag = (simulation: d3.Simulation<any, undefined>) => {
       const dragStarted = (event: any) => {
@@ -294,6 +311,42 @@ WHERE {
         .on("end", dragended);
     };
 
+    const maxElementsByType = {};
+
+    d3Data.nodes.forEach((node) => {
+      if (!maxElementsByType[node.type]) {
+        // If the type is encountered for the first time, initialize the count
+        maxElementsByType[node.type] = node.elements.length;
+      } else {
+        // If the type has been encountered before, update the count if needed
+        maxElementsByType[node.type] = Math.max(
+          maxElementsByType[node.type],
+          node.elements.length
+        );
+      }
+    });
+
+    console.log("max:", maxElementsByType);
+
+    const nodeSize = (d: Nodes): Number => {
+      const maxValue = d3Data.nodes.reduce((max, current) => {
+        return current.type > current.type ? current : max;
+      }, d3Data.nodes[0]);
+
+      console.log("max:", maxValue);
+
+      console.log(maxValue);
+
+      const sizeScale = d3
+        .scaleLinear()
+        .domain([minValue, maxValue])
+        .range([minSize, maxSize]);
+
+      const numberOfConnections = d3Data.links.filter(
+        (l) => l[d.key] === l.key
+      );
+    };
+
     const link = g
       .selectAll("line")
       .data(d3Data.links)
@@ -309,7 +362,7 @@ WHERE {
       .enter()
       .append("circle")
       .attr("r", 8)
-      .style("fill", (d) => colour(d.level?.toString(2) as string))
+      .style("fill", (d) => colour(d.type))
       .join("circle")
       .attr("r", 5)
       .call(drag(simulation as any) as any);
@@ -330,6 +383,8 @@ WHERE {
       .attr("viewBox", `0 0 ${width} ${height}`)
       .attr("preserveAspectRatio", "xMidYMid meet");
   }, [data, isLoading, d3Data]);
+
+  console.log(d3Data);
 
   return (
     <div>

@@ -58,15 +58,15 @@ const bfs = (start: string) => {
 export const findLevelsBFS = (graph: D3ForceGraph): Nodes[] => {
   const { nodes, links } = graph;
 
-  console.log("got nodes?", nodes);
-
   nodes.forEach((node) => {
     node.level = null;
   });
 
-  const nodeMap = new Map<string, Nodes>(nodes.map((node) => [node.key, node]));
+  const nodeMap = new Map<number, Nodes>(
+    nodes.map((node) => [node.index as number, node])
+  );
 
-  const rootNode = nodeMap.get(nodes[0].key);
+  const rootNode = nodeMap.get(nodes[19].index as number);
 
   if (!rootNode) {
     console.error("Root node with id ${rootNode} not found");
@@ -75,25 +75,28 @@ export const findLevelsBFS = (graph: D3ForceGraph): Nodes[] => {
 
   rootNode.level = 0;
 
-  const queue: Nodes[] = [rootNode];
+  const queue = [];
+  queue.push(nodes[19]);
 
   while (queue.length > 0) {
     const currentNode = queue.shift();
-    links
-      .filter((link) => link.source.key === currentNode?.key)
-      .forEach((link) => {
-        const neighbourNode = nodeMap.get(link.target.key);
-        console.log("node map:", nodeMap);
-        if (neighbourNode?.level === null) {
-          neighbourNode.level = (currentNode?.level as number) + 1;
-          queue.push(neighbourNode);
-        }
-      });
+
+    const connectedLinks = links.filter(
+      (link) =>
+        link.source.key === currentNode!.key ||
+        link.target.key === currentNode!.key
+    );
+    connectedLinks.forEach((link) => {
+      const neighbourNode = nodeMap.get(link.source.index);
+      if (neighbourNode?.level === null) {
+        neighbourNode.level = (currentNode?.level as number) + 1;
+
+        queue.push(neighbourNode);
+      }
+    });
   }
   return nodes;
 };
-
-// bfs("PHX");
 
 const dfs = (start: string, visited = new Set()) => {
   visited.add(start);
@@ -111,4 +114,15 @@ const dfs = (start: string, visited = new Set()) => {
       dfs(destination, visited);
     }
   }
+};
+
+export const graphAnalysis = (graph: D3ForceGraph) => {
+  const index = graph.nodes.findIndex(
+    (x) =>
+      x.key === "http://dbpedia.org/resource/You_Will_Meet_a_Tall_Dark_Stranger"
+  );
+
+  const foundNode = graph.nodes.find((n) => n.index === index);
+
+  return foundNode;
 };

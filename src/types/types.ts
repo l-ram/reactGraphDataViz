@@ -70,6 +70,7 @@ export interface Nodes extends d3.SimulationNodeDatum {
   label: string;
   value: boolean;
   level?: number | null;
+  type: string;
 }
 
 export interface GraphConfig {
