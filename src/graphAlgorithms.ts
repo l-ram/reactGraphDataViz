@@ -1,4 +1,3 @@
-import { nextTick } from "process";
 import { D3ForceGraph } from "./types/types";
 import { Nodes } from "./types/types";
 
@@ -58,6 +57,8 @@ const bfs = (start: string) => {
 export const findLevelsBFS = (graph: D3ForceGraph): Nodes[] => {
   const { nodes, links } = graph;
 
+  console.log("before levels:", nodes);
+
   nodes.forEach((node) => {
     node.level = null;
   });
@@ -87,7 +88,7 @@ export const findLevelsBFS = (graph: D3ForceGraph): Nodes[] => {
         link.target.key === currentNode!.key
     );
     connectedLinks.forEach((link) => {
-      const neighbourNode = nodeMap.get(link.source.index);
+      const neighbourNode = nodeMap.get(link.source.index!);
       if (neighbourNode?.level === null) {
         neighbourNode.level = (currentNode?.level as number) + 1;
 
@@ -117,12 +118,11 @@ const dfs = (start: string, visited = new Set()) => {
 };
 
 export const graphAnalysis = (graph: D3ForceGraph) => {
-  const index = graph.nodes.findIndex(
-    (x) =>
-      x.key === "http://dbpedia.org/resource/You_Will_Meet_a_Tall_Dark_Stranger"
-  );
+  const index = graph.nodes.findIndex((x) => x.type === "director");
 
   const foundNode = graph.nodes.find((n) => n.index === index);
+
+  console.log("found node:", foundNode);
 
   return foundNode;
 };

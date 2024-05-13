@@ -2,7 +2,8 @@
 import * as d3 from "d3";
 import { useEffect, useRef, useState } from "react";
 import UseGetSPARQL from "../hooks/UseGetSPARQL";
-import { findLevelsBFS } from "../graphAlgorithms";
+
+import { findLevelsBFS, graphAnalysis } from "../graphAlgorithms";
 import {
   D3ForceGraph,
   GraphConfig,
@@ -266,7 +267,7 @@ WHERE {
 
     const g = svg.append("g");
 
-    const colours = d3.schemeTableau10;
+    const colours = d3.schemeSet2;
     const colour = d3.scaleOrdinal(colours);
 
     const zoom = d3
@@ -311,40 +312,52 @@ WHERE {
         .on("end", dragended);
     };
 
-    const maxElementsByType = {};
+    // Max count
+    const nodeKeyCounts: { [key: string]: number } = {};
+    d3Data.links.forEach((link) => {
+      const sourceKey = link.source.key;
+      const targetKey = link.target.key;
+      nodeKeyCounts[sourceKey] = (nodeKeyCounts[sourceKey] || 0) + 1;
+      nodeKeyCounts[targetKey] = (nodeKeyCounts[targetKey] || 0) + 1;
+    });
 
-    d3Data.nodes.forEach((node) => {
-      if (!maxElementsByType[node.type]) {
-        // If the type is encountered for the first time, initialize the count
-        maxElementsByType[node.type] = node.elements.length;
-      } else {
-        // If the type has been encountered before, update the count if needed
-        maxElementsByType[node.type] = Math.max(
-          maxElementsByType[node.type],
-          node.elements.length
-        );
+    // Find the maximum count
+    let maxCount = 0;
+    let mostFrequentKeys: string[] = [];
+
+    Object.entries(nodeKeyCounts).forEach(([key, count]) => {
+      if (count > maxCount) {
+        maxCount = count;
+        mostFrequentKeys = [key];
+      } else if (count === maxCount) {
+        mostFrequentKeys.push(key);
       }
     });
 
-    console.log("max:", maxElementsByType);
+    console.log("most:", mostFrequentKeys);
 
-    const nodeSize = (d: Nodes): Number => {
-      const maxValue = d3Data.nodes.reduce((max, current) => {
-        return current.type > current.type ? current : max;
-      }, d3Data.nodes[0]);
+    console.log(
+      `The node key(s) "${mostFrequentKeys.join(
+        ", "
+      )}" appear(s) ${maxCount} times.`
+    );
 
-      console.log("max:", maxValue);
+    const getConnectionsCount = (nodeKey: string, links: any) => {
+      let connectionsCount = 0;
+      links.forEach((link: any) => {
+        if (link.source.key === nodeKey || link.target.key === nodeKey) {
+          connectionsCount++;
+        }
+      });
+      return connectionsCount;
+    };
 
-      console.log(maxValue);
+    const nodeSize = (d: Nodes): number => {
+      const sizeScale = d3.scaleLinear().domain([0, maxCount]).range([2, 10]);
 
-      const sizeScale = d3
-        .scaleLinear()
-        .domain([minValue, maxValue])
-        .range([minSize, maxSize]);
-
-      const numberOfConnections = d3Data.links.filter(
-        (l) => l[d.key] === l.key
-      );
+      const numberOfConnections = getConnectionsCount(d.key, d3Data.links);
+      const radius = sizeScale(numberOfConnections);
+      return radius;
     };
 
     const link = g
@@ -361,10 +374,9 @@ WHERE {
       .data(d3Data.nodes)
       .enter()
       .append("circle")
-      .attr("r", 8)
+      .attr("r", (d) => nodeSize(d))
       .style("fill", (d) => colour(d.type))
       .join("circle")
-      .attr("r", 5)
       .call(drag(simulation as any) as any);
 
     node.append("title").text((d) => d.key);
@@ -385,6 +397,8 @@ WHERE {
   }, [data, isLoading, d3Data]);
 
   console.log(d3Data);
+
+  graphAnalysis(d3Data);
 
   return (
     <div>
