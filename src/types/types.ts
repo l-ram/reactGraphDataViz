@@ -85,6 +85,7 @@ export interface GraphConfig {
   label2?: string | false;
   value1?: string | false;
   value2?: string | false;
+  type?: string;
 }
 
 interface Source {

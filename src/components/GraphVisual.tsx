@@ -90,8 +90,6 @@ const GraphVisual = () => {
       nodeTypeMapping[head] = head;
     });
 
-    console.log("types:", nodeTypeMapping);
-
     const opts = {
       key1: config.key1 || head[0] || "key1",
       key2: config.key2 || head[1] || "key2",
@@ -164,6 +162,17 @@ const GraphVisual = () => {
     return graph;
   };
 
+  const beatles: string = `PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+  PREFIX dbo: <http://dbpedia.org/ontology/>
+  PREFIX dbr: <http://dbpedia.org/resource/>
+  
+  SELECT ?album
+  WHERE {
+      dbr:The_Beatles dbo:artist ?artist .
+      ?album rdf:type dbo:Album ;
+             dbo:artist ?artist .
+  }`;
+
   const simpleQuery: string = `
   # https://en.wikipedia.org/wiki/History_of_programming_languages
 # https://en.wikipedia.org/wiki/Perl
@@ -210,7 +219,7 @@ WHERE {
       FILTER(?director =  dbr:Woody_Allen)
   }`;
 
-  const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
+  const { data, isLoading, isError } = UseGetSPARQL(beatles);
 
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);
@@ -245,18 +254,6 @@ WHERE {
     }
     sparql2D3Graph(jsonData);
   }, [data, jsonData]);
-
-  useEffect(() => {
-    if (d3Data.nodes.length == 0) {
-      return;
-    } else {
-      const updatedNodes = findLevelsBFS(d3Data);
-      setD3Data((prevState) => ({
-        ...prevState,
-        nodes: updatedNodes,
-      }));
-    }
-  }, [data]);
 
   // D3
   useEffect(() => {
@@ -396,9 +393,18 @@ WHERE {
       .attr("preserveAspectRatio", "xMidYMid meet");
   }, [data, isLoading, d3Data]);
 
-  console.log(d3Data);
-
-  graphAnalysis(d3Data);
+  useEffect(() => {
+    if (d3Data.nodes.length > 1) {
+      console.log("d3Data for findLevels", d3Data);
+      const updatedNodes = findLevelsBFS(d3Data);
+      setD3Data((prevState) => ({
+        ...prevState,
+        nodes: updatedNodes,
+      }));
+    } else {
+      return;
+    }
+  }, []);
 
   return (
     <div>
