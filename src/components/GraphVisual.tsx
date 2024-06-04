@@ -219,7 +219,7 @@ WHERE {
       FILTER(?director =  dbr:Woody_Allen)
   }`;
 
-  const { data, isLoading, isError } = UseGetSPARQL(beatles);
+  const { data, isLoading, isError } = UseGetSPARQL(woodyAllenQuery);
 
   const [width, setWidth] = useState(window.innerWidth);
   const [height, setHeight] = useState(window.innerHeight);

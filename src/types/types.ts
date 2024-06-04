@@ -87,25 +87,3 @@ export interface GraphConfig {
   value2?: string | false;
   type?: string;
 }
-
-interface Source {
-  index?: number;
-  key: string | number;
-  label: string | number;
-  value: string | number;
-  vx: number;
-  vy: number;
-  x: number;
-  y: number;
-}
-
-interface Target {
-  index?: number;
-  key: string | number;
-  label: string | number;
-  value: string | number;
-  vx: number;
-  vy: number;
-  x: number;
-  y: number;
-}
